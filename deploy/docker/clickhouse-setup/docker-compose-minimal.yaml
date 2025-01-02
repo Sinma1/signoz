@@ -83,7 +83,7 @@ services:
   #     - ALLOW_ANONYMOUS_LOGIN=yes
   #     - ZOO_AUTOPURGE_INTERVAL=1
   clickhouse:
-    !!merge <<: *clickhouse-defaults
+    <<: *clickhouse-defaults
     container_name: signoz-clickhouse
     hostname: clickhouse
     ports:
@@ -170,7 +170,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-    !!merge <<: *db-depend
+    <<: *db-depend
   frontend:
     image: signoz/frontend:${DOCKER_TAG:-0.66.0}
     container_name: signoz-frontend

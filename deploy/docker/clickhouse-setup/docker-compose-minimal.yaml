@@ -3,20 +3,10 @@ x-clickhouse-defaults: &clickhouse-defaults
   # addding non LTS version due to this fix https://github.com/ClickHouse/ClickHouse/commit/32caf8716352f45c1b617274c7508c86b7d1afab
   image: clickhouse/clickhouse-server:24.1.2-alpine
   tty: true
-  depends_on:
-    - zookeeper-1
-    # - zookeeper-2
-    # - zookeeper-3
   logging:
     options:
       max-size: 50m
       max-file: "3"
-  healthcheck:
-    # "clickhouse", "client", "-u ${CLICKHOUSE_USER}", "--password ${CLICKHOUSE_PASSWORD}", "-q 'SELECT 1'"
-    test: ["CMD", "wget", "--spider", "-q", "0.0.0.0:8123/ping"]
-    interval: 30s
-    timeout: 5s
-    retries: 3
   ulimits:
     nproc: 65535
     nofile:
@@ -136,9 +126,6 @@ services:
     container_name: signoz-alertmanager
     volumes:
       - ./data/alertmanager:/data
-    depends_on:
-      query-service:
-        condition: service_healthy
     restart: on-failure
     command:
       - --queryService.url=http://query-service:8085
@@ -170,14 +157,10 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-    <<: *db-depend
   frontend:
     image: signoz/frontend:${DOCKER_TAG:-0.66.0}
     container_name: signoz-frontend
     restart: on-failure
-    depends_on:
-      - alertmanager
-      - query-service
     ports:
       - "3301:3301"
     volumes:
@@ -189,13 +172,6 @@ services:
       - "sync"
       - "--dsn=tcp://clickhouse:9000"
       - "--up="
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-        # clickhouse-2:
-        #   condition: service_healthy
-        # clickhouse-3:
-        #   condition: service_healthy
   otel-collector-migrator-async:
     image: signoz/signoz-schema-migrator:${OTELCOL_TAG:-0.111.21}
     container_name: otel-migrator-async
@@ -203,15 +179,6 @@ services:
       - "async"
       - "--dsn=tcp://clickhouse:9000"
       - "--up="
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-      otel-collector-migrator-sync:
-        condition: service_completed_successfully
-        # clickhouse-2:
-        #   condition: service_healthy
-        # clickhouse-3:
-        #   condition: service_healthy
   otel-collector:
     image: signoz/signoz-otel-collector:${OTELCOL_TAG:-0.111.21}
     container_name: signoz-otel-collector
@@ -238,13 +205,6 @@ services:
       # - "55678:55678"   # OpenCensus receiver
       # - "55679:55679"   # zPages extension
     restart: on-failure
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-      otel-collector-migrator-sync:
-        condition: service_completed_successfully
-      query-service:
-        condition: service_healthy
   logspout:
     image: "gliderlabs/logspout:v3.2.14"
     container_name: signoz-logspout
@@ -252,6 +212,4 @@ services:
       - /etc/hostname:/etc/host_hostname:ro
       - /var/run/docker.sock:/var/run/docker.sock
     command: syslog+tcp://otel-collector:2255
-    depends_on:
-      - otel-collector
     restart: on-failure

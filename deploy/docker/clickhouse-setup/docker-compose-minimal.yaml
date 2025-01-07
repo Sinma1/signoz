@@ -172,6 +172,7 @@ services:
       - "sync"
       - "--dsn=tcp://clickhouse:9000"
       - "--up="
+    restart: on-failure
   otel-collector-migrator-async:
     image: signoz/signoz-schema-migrator:${OTELCOL_TAG:-0.111.21}
     container_name: otel-migrator-async
@@ -179,6 +180,7 @@ services:
       - "async"
       - "--dsn=tcp://clickhouse:9000"
       - "--up="
+    restart: on-failure
   otel-collector:
     image: signoz/signoz-otel-collector:${OTELCOL_TAG:-0.111.21}
     container_name: signoz-otel-collector

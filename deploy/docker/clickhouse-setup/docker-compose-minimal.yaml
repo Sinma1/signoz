@@ -14,8 +14,8 @@ x-clickhouse-defaults: &clickhouse-defaults
       hard: 262144
 x-db-depend: &db-depend
   depends_on:
-    # clickhouse:
-      # condition: service_healthy
+    clickhouse:
+      condition: service_healthy
     otel-collector-migrator-sync:
       condition: service_completed_successfully
       # clickhouse-2:
@@ -72,22 +72,26 @@ services:
   #     - ZOO_SERVERS=zookeeper-1:2888:3888,zookeeper-2:2888:3888,0.0.0.0:2888:3888
   #     - ALLOW_ANONYMOUS_LOGIN=yes
   #     - ZOO_AUTOPURGE_INTERVAL=1
-  # clickhouse:
-  #   <<: *clickhouse-defaults
-  #   container_name: signoz-clickhouse
-  #   hostname: clickhouse
-  #   ports:
-  #     - "9000:9000"
-  #     - "8123:8123"
-  #     - "9181:9181"
-  #   volumes:
-  #     - ./clickhouse-config.xml:/etc/clickhouse-server/config.xml
-  #     - ./clickhouse-users.xml:/etc/clickhouse-server/users.xml
-  #     - ./custom-function.xml:/etc/clickhouse-server/custom-function.xml
-  #     - ./clickhouse-cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
-  #     # - ./clickhouse-storage.xml:/etc/clickhouse-server/config.d/storage.xml
-  #     - ./data/clickhouse/:/var/lib/clickhouse/
-  #     - ./user_scripts:/var/lib/clickhouse/user_scripts/
+  clickhouse:
+    <<: *clickhouse-defaults
+    container_name: signoz-clickhouse
+    hostname: clickhouse
+    expose:
+      - "9000"
+      - "8123"
+      - "9181"
+    ports:
+      - "9000:9000"
+      - "8123:8123"
+      - "9181:9181"
+    volumes:
+      - ./clickhouse-config.xml:/etc/clickhouse-server/config.xml
+      - ./clickhouse-users.xml:/etc/clickhouse-server/users.xml
+      - ./custom-function.xml:/etc/clickhouse-server/custom-function.xml
+      - ./clickhouse-cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
+      # - ./clickhouse-storage.xml:/etc/clickhouse-server/config.d/storage.xml
+      - ./data/clickhouse/:/var/lib/clickhouse/
+      - ./user_scripts:/var/lib/clickhouse/user_scripts/
   # clickhouse-2:
   #   <<: *clickhouse-defaults
   #   container_name: signoz-clickhouse-2

@@ -72,22 +72,22 @@ services:
   #     - ZOO_SERVERS=zookeeper-1:2888:3888,zookeeper-2:2888:3888,0.0.0.0:2888:3888
   #     - ALLOW_ANONYMOUS_LOGIN=yes
   #     - ZOO_AUTOPURGE_INTERVAL=1
-  clickhouse:
-    <<: *clickhouse-defaults
-    container_name: signoz-clickhouse
-    hostname: clickhouse
-    ports:
-      - "9000:9000"
-      - "8123:8123"
-      - "9181:9181"
-    volumes:
-      - ./clickhouse-config.xml:/etc/clickhouse-server/config.xml
-      - ./clickhouse-users.xml:/etc/clickhouse-server/users.xml
-      - ./custom-function.xml:/etc/clickhouse-server/custom-function.xml
-      - ./clickhouse-cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
-      # - ./clickhouse-storage.xml:/etc/clickhouse-server/config.d/storage.xml
-      - ./data/clickhouse/:/var/lib/clickhouse/
-      - ./user_scripts:/var/lib/clickhouse/user_scripts/
+  # clickhouse:
+  #   <<: *clickhouse-defaults
+  #   container_name: signoz-clickhouse
+  #   hostname: clickhouse
+  #   ports:
+  #     - "9000:9000"
+  #     - "8123:8123"
+  #     - "9181:9181"
+  #   volumes:
+  #     - ./clickhouse-config.xml:/etc/clickhouse-server/config.xml
+  #     - ./clickhouse-users.xml:/etc/clickhouse-server/users.xml
+  #     - ./custom-function.xml:/etc/clickhouse-server/custom-function.xml
+  #     - ./clickhouse-cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
+  #     # - ./clickhouse-storage.xml:/etc/clickhouse-server/config.d/storage.xml
+  #     - ./data/clickhouse/:/var/lib/clickhouse/
+  #     - ./user_scripts:/var/lib/clickhouse/user_scripts/
   # clickhouse-2:
   #   <<: *clickhouse-defaults
   #   container_name: signoz-clickhouse-2
@@ -143,7 +143,7 @@ services:
       - ../dashboards:/root/config/dashboards
       - ./data/signoz/:/var/lib/signoz/
     environment:
-      - ClickHouseUrl=tcp://clickhouse:9000
+      - ClickHouseUrl=tcp://${CLICKHOUSE_URL:-clickhouse:9000}
       - ALERTMANAGER_API_PREFIX=http://alertmanager:9093/api/
       - SIGNOZ_LOCAL_DB_PATH=/var/lib/signoz/signoz.db
       - DASHBOARDS_PATH=/root/config/dashboards
@@ -170,7 +170,7 @@ services:
     container_name: otel-migrator-sync
     command:
       - "sync"
-      - "--dsn=tcp://clickhouse:9000"
+      - "--dsn=tcp://${CLICKHOUSE_URL:-clickhouse:9000}"
       - "--up="
     restart: on-failure
   otel-collector-migrator-async:
@@ -178,7 +178,7 @@ services:
     container_name: otel-migrator-async
     command:
       - "async"
-      - "--dsn=tcp://clickhouse:9000"
+      - "--dsn=tcp://${CLICKHOUSE_URL:-clickhouse:9000}"
       - "--up="
     restart: on-failure
   otel-collector:

@@ -34,6 +34,10 @@ services:
     container_name: signoz-zookeeper-1
     hostname: zookeeper-1
     user: root
+    expose:
+      - "2181"
+      - "2888"
+      - "3888"
     ports:
       - "2181:2181"
       - "2888:2888"
@@ -148,6 +152,9 @@ services:
     # ports:
     #   - "6060:6060"     # pprof port
     #   - "8080:8080"     # query-service port
+    expose:
+      - "8080"
+      - "6060"
     volumes:
       - ./prometheus.yml:/root/config/prometheus.yml
       - ../dashboards:/root/config/dashboards
@@ -173,6 +180,8 @@ services:
     restart: on-failure
     ports:
       - "3301:3301"
+    expose:
+      - "3301"
     volumes:
       - ../common/nginx-config.conf:/etc/nginx/conf.d/default.conf
   otel-collector-migrator-sync:

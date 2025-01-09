@@ -7,6 +7,12 @@ x-clickhouse-defaults: &clickhouse-defaults
     options:
       max-size: 50m
       max-file: "3"
+  healthcheck:
+    # "clickhouse", "client", "-u ${CLICKHOUSE_USER}", "--password ${CLICKHOUSE_PASSWORD}", "-q 'SELECT 1'"
+    test: ["CMD", "wget", "--spider", "-q", "0.0.0.0:8123/ping"]
+    interval: 30s
+    timeout: 5s
+    retries: 3
   ulimits:
     nproc: 65535
     nofile:
@@ -177,6 +183,9 @@ services:
       - "--dsn=tcp://${CLICKHOUSE_URL:-clickhouse:9000}"
       - "--up="
     restart: on-failure
+    depends_on:
+      clickhouse:
+        condition: service_healthy
   otel-collector-migrator-async:
     image: signoz/signoz-schema-migrator:${OTELCOL_TAG:-0.111.21}
     container_name: otel-migrator-async
@@ -185,6 +194,11 @@ services:
       - "--dsn=tcp://${CLICKHOUSE_URL:-clickhouse:9000}"
       - "--up="
     restart: on-failure
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      otel-collector-migrator-sync:
+        condition: service_completed_successfully
   otel-collector:
     image: signoz/signoz-otel-collector:${OTELCOL_TAG:-0.111.21}
     container_name: signoz-otel-collector
